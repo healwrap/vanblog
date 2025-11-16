@@ -97,7 +97,7 @@ export default function (props: {
             showFriends={props.option.showFriends}
             menus={props.option.menus}
           />
-          <div className="flex-1 mx-auto lg:px-6 md:py-4 py-2 px-2 md:px-4 text-gray-700">
+          <div className="flex-1 w-full max-w-screen-2xl mx-auto lg:px-6 md:py-4 py-2 px-2 md:px-4 text-gray-700">
             <LayoutBody children={props.children} sideBar={props.sideBar} />
           </div>
           <Footer

@@ -23,7 +23,7 @@ export default function ({
 }) {
   return (
     <>
-      <footer className="mt-auto pt-8 md:pt-12 text-center text-sm space-y-1 dark:text-dark footer-icp-number">
+      <footer className="mt-auto py-4 text-center text-sm space-y-1 dark:text-dark footer-icp-number">
         {Boolean(ipcNumber) && (
           <p className="">
             ICP 编号:&nbsp;
@@ -57,7 +57,7 @@ export default function ({
           </p>
         )}
         <RunningTime since={since}></RunningTime>
-        
+
 
         <p className="select-none footer-copy-right">
           © {new Date(since).getFullYear()} - {new Date().getFullYear()}

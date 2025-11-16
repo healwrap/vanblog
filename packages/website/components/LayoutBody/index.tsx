@@ -4,8 +4,8 @@ export default function (props: {
 }) {
   return (
     <>
-      <div className="flex mx-auto justify-center">
-        <div className="flex-shrink flex-grow md:max-w-3xl xl:max-w-4xl w-full vanblog-main">
+      <div className="flex justify-center gap-6 w-full">
+        <div className="flex-1 w-full md:max-w-4xl xl:max-w-4xl 2xl:max-w-4xl vanblog-main">
           {props.children}
         </div>
         <div
