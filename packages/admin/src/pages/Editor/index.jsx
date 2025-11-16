@@ -18,6 +18,7 @@ import { getPathname } from '@/services/van-blog/getPathname';
 import { parseMarkdownFile, parseObjToMarkdown } from '@/services/van-blog/parseMarkdownFile';
 import { useCacheState } from '@/services/van-blog/useCacheState';
 import { DownOutlined } from '@ant-design/icons';
+import { Brain } from 'lucide-react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Button, Dropdown, Input, Menu, message, Modal, Space, Tag, Upload } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -28,6 +29,8 @@ export default function () {
   const [value, setValue] = useState('');
   const [currObj, setCurrObj] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [editorConfig, setEditorConfig] = useCacheState(
     { afterSave: 'stay', useLocalCache: 'close' },
     'editorConfig',
@@ -210,28 +213,51 @@ export default function () {
     if (history.location.query?.type == 'about') {
       hasTags = true;
     }
+    if (!hasMore) {
+      setSaveModalVisible(true);
+      return;
+    }
     Modal.confirm({
       title: `确定保存吗？${hasTags ? '' : '此文章还没设置标签呢'}`,
-      content: hasMore ? undefined : (
-        <div style={{ marginTop: 8 }}>
-          <p>缺少完整的 more 标记！</p>
-          <p>这可能会造成阅读全文前的图片语句被截断从而无法正常显示！</p>
-          <p>默认将截取指定的字符数量作为阅读全文前的内容。</p>
-          <p>
-            您可以点击编辑器工具栏最后第一个按钮在合适的地方插入标记。
-            <a
-              target={'_blank'}
-              rel="noreferrer"
-              href="https://vanblog.mereith.com/feature/basic/editor.html#%E4%B8%80%E9%94%AE%E6%8F%92%E5%85%A5-more-%E6%A0%87%E8%AE%B0"
-            >
-              相关文档
-            </a>
-          </p>
-          <img src="/more.png" alt="more" width={200}></img>
-        </div>
-      ),
+      content: undefined,
       onOk: saveFn,
     });
+  };
+  const aiGenIntroAndInsert = async () => {
+    try {
+      setAiLoading(true);
+      const res = await fetch('/api/admin/ai/intro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token: window.localStorage.getItem('token') || 'null',
+        },
+        body: JSON.stringify({ content: value || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok || data?.statusCode !== 200) {
+        message.error(data?.message || 'AI 简介生成失败');
+        return;
+      }
+      const intro = (data?.data?.intro || '').trim();
+      if (!intro) {
+        message.error('AI 未返回内容');
+        return;
+      }
+      const moreTag = '<!-- more -->';
+      const idx = (value || '').indexOf(moreTag);
+      let next = '';
+      if (idx >= 0) {
+        const rest = (value || '').slice(idx);
+        next = `${intro}\n\n${rest}`;
+      } else {
+        next = `${intro}\n\n${moreTag}\n\n${value || ''}`;
+      }
+      setValue(next);
+      message.success('已使用 AI 生成并插入简介');
+    } finally {
+      setAiLoading(false);
+    }
   };
   const handleExport = async () => {
     const md = parseObjToMarkdown(currObj);
@@ -500,6 +526,43 @@ export default function () {
             }
           }}
         />
+        <Modal
+          visible={saveModalVisible}
+          title={`确定保存吗？${(['article', 'draft'].includes(history.location.query?.type) && currObj?.tags && currObj.tags.length > 0) || history.location.query?.type == 'about' ? '' : '此文章还没设置标签呢'}`}
+          onCancel={() => setSaveModalVisible(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setSaveModalVisible(false)}>取消</Button>,
+            <Button
+              key="ai"
+              type="primary"
+
+              icon={<Brain size={14} style={{ verticalAlign: '-0.125em', marginRight: 5 }} />}
+              loading={aiLoading}
+              disabled={aiLoading}
+              onClick={aiGenIntroAndInsert}
+            >
+              AI生成
+            </Button>,
+            <Button key="ok" type="primary" onClick={async () => { await saveFn(); setSaveModalVisible(false); }}>确认</Button>,
+          ]}
+        >
+          <div style={{ marginTop: 8 }}>
+            <p>缺少完整的 more 标记！</p>
+            <p>这可能会造成阅读全文前的图片语句被截断从而无法正常显示！</p>
+            <p>默认将截取指定的字符数量作为阅读全文前的内容。</p>
+            <p>
+              您可以点击编辑器工具栏最后第一个按钮在合适的地方插入标记。
+              <a
+                target={'_blank'}
+                rel="noreferrer"
+                href="https://vanblog.mereith.com/feature/basic/editor.html#%E4%B8%80%E9%94%AE%E6%8F%92%E5%85%A5-more-%E6%A0%87%E8%AE%B0"
+              >
+                相关文档
+              </a>
+            </p>
+            <img src="/more.png" alt="more" width={200}></img>
+          </div>
+        </Modal>
       </div>
     </PageContainer>
   );

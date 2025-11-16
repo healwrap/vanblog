@@ -23,7 +23,7 @@ export default function ({
 }) {
   return (
     <>
-      <footer className="text-center text-sm space-y-1 mt-8 md:mt-12 dark:text-dark footer-icp-number">
+      <footer className="mt-auto pt-8 md:pt-12 text-center text-sm space-y-1 dark:text-dark footer-icp-number">
         {Boolean(ipcNumber) && (
           <p className="">
             ICP 编号:&nbsp;
@@ -57,16 +57,7 @@ export default function ({
           </p>
         )}
         <RunningTime since={since}></RunningTime>
-        <p className="footer-powered-by-vanblog">
-          Powered By&nbsp;
-          <a
-            href="https://vanblog.mereith.com"
-            target={"_blank"}
-            className="hover:text-gray-900 dark:hover:text-dark-hover transition ua ua-link"
-          >
-            VanBlog <span>{version}</span>
-          </a>
-        </p>
+        
 
         <p className="select-none footer-copy-right">
           © {new Date(since).getFullYear()} - {new Date().getFullYear()}

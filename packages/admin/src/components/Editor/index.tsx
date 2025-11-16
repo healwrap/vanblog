@@ -26,6 +26,7 @@ import rawHTML from './rawHTML';
 import { Heading } from './plugins/heading';
 import { customCodeBlock } from './plugins/codeBlock';
 import { LinkTarget } from './plugins/linkTarget';
+import { aiIntro } from './aiIntro';
 
 const sanitize = (schema) => {
   schema.protocols.src.push('data');
@@ -65,6 +66,7 @@ export default function EditorComponent(props: {
       imgUploadPlugin(setLoading),
       emoji(),
       insertMore(),
+      aiIntro(setLoading),
       rawHTML(),
       historyIcon(),
       Heading(),

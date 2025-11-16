@@ -70,6 +70,7 @@ export default function (props: {
       >
         <Toaster />
         {/* <ImageProvider> */}
+          <div className="min-h-screen flex flex-col">
           <NavBar
             openArticleLinksInNewWindow={
               props.option.openArticleLinksInNewWindow == "true"
@@ -96,18 +97,18 @@ export default function (props: {
             showFriends={props.option.showFriends}
             menus={props.option.menus}
           />
-
-          <div className=" mx-auto  lg:px-6  md:py-4 py-2 px-2 md:px-4  text-gray-700 ">
+          <div className="flex-1 mx-auto lg:px-6 md:py-4 py-2 px-2 md:px-4 text-gray-700">
             <LayoutBody children={props.children} sideBar={props.sideBar} />
-            <Footer
-              ipcHref={props.option.ipcHref}
-              ipcNumber={props.option.ipcNumber}
-              since={props.option.since}
-              version={props.option.version}
-              gaBeianLogoUrl={props.option.gaBeianLogoUrl}
-              gaBeianNumber={props.option.gaBeianNumber}
-              gaBeianUrl={props.option.gaBeianUrl}
-            />
+          </div>
+          <Footer
+            ipcHref={props.option.ipcHref}
+            ipcNumber={props.option.ipcNumber}
+            since={props.option.since}
+            version={props.option.version}
+            gaBeianLogoUrl={props.option.gaBeianLogoUrl}
+            gaBeianNumber={props.option.gaBeianNumber}
+            gaBeianUrl={props.option.gaBeianUrl}
+          />
           </div>
         {/* </ImageProvider> */}
       </ThemeContext.Provider>

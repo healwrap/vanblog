@@ -1,3 +1,4 @@
+import 'src/env';
 import * as yaml from 'yaml';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -39,9 +40,11 @@ export const loadConfig = (key: string, defaultValue?: any) => {
       .split('.')
       .map((x) => x.toUpperCase())
       .join('_');
-
+  console.log(envKey);
   if (typeof defaultValue !== 'function') {
-    return process.env[envKey] || _.get(config, key, defaultValue);
+    const res = process.env[envKey] || _.get(config, key, defaultValue);
+    console.log(res);
+    return res;
   } else {
     return process.env[envKey] || _.get(config, key, false) || defaultValue();
   }

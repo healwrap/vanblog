@@ -82,6 +82,8 @@ import { PipelineProvider } from './provider/pipeline/pipeline.provider';
 import { PipelineController } from './controller/admin/pipeline/pipeline.controller';
 import { TokenController } from './controller/admin/token/token.controller';
 import { initJwt } from './utils/initJwt';
+import { AiController } from './controller/admin/ai/ai.controller';
+import { AiProvider } from './provider/ai/ai.provider';
 
 @Module({
   imports: [
@@ -143,6 +145,7 @@ import { initJwt } from './utils/initJwt';
     PublicOldCustomPageRedirectController,
     PipelineController,
     TokenController,
+    AiController,
   ],
   providers: [
     AppService,
@@ -180,6 +183,7 @@ import { initJwt } from './utils/initJwt';
     TokenGuard,
     WebsiteProvider,
     PipelineProvider,
+    AiProvider,
   ],
 })
 export class AppModule implements NestModule {

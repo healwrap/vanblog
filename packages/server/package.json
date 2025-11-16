@@ -63,7 +63,8 @@
     "rxjs": "^7.8.1",
     "sitemap": "^7.1.1",
     "swagger-ui-express": "^4.6.3",
-    "yaml": "^2.3.4"
+    "yaml": "^2.3.4",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.5.0",
