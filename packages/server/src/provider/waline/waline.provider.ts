@@ -222,11 +222,16 @@ export class WalineProvider {
     const db = await this.getWalineDB();
     const colNames = await this.resolveCommentsCollectionNames(db);
     const deserialized = docs.map((d) => {
-      const r = { ...d };
+      const r: any = { ...d };
       for (const k of Object.keys(r)) {
         const v = r[k];
-        if (typeof v === 'string' && /^[a-fA-F0-9]{24}$/.test(v)) {
+        if (k === '_id' && typeof v === 'string' && /^[a-fA-F0-9]{24}$/.test(v)) {
           r[k] = new ObjectId(v);
+        } else if (k === 'pid' || k === 'rid') {
+          // 保持为字符串以匹配 Waline 的查询逻辑
+          r[k] = v;
+        } else if (typeof v === 'string' && /^[a-fA-F0-9]{24}$/.test(v)) {
+          r[k] = v; // 其他字段保留字符串
         }
       }
       return r;
