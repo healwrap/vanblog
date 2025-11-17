@@ -1,5 +1,5 @@
 import Footer from '@/components/Footer';
-import { HomeOutlined, LogoutOutlined, ProjectOutlined } from '@ant-design/icons';
+import { HomeOutlined, LogoutOutlined, ProjectOutlined, ExportOutlined } from '@ant-design/icons';
 import { PageLoading, SettingDrawer } from '@ant-design/pro-layout';
 import { message, Modal, notification } from 'antd';
 import moment from 'moment';
@@ -222,6 +222,29 @@ export const layout = ({ initialState, setInitialState }) => {
         }
       />,
     ],
+
+    menuItemRender: (item, dom) => {
+      const getWalineUrl = () => {
+        if (initialState?.version && initialState?.version == 'dev') {
+          return 'http://127.0.0.1:8360/ui';
+        }
+        return '/ui/';
+      };
+      if (item.path === '/site/comment') {
+        return (
+          <a
+            href={getWalineUrl()}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+          >
+            {dom}
+            <ExportOutlined style={{ fontSize: 12, marginLeft: 8 }} />
+          </a>
+        );
+      }
+      return <Link to={item.path}>{dom}</Link>;
+    },
 
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,

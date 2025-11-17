@@ -59,7 +59,7 @@ export default [
     name: '评论管理',
     icon: 'comment',
     path: '/site/comment',
-    component: './CommentManage',
+    // component: './CommentManage',
     hideInBreadcrumb: true,
     access: 'isAdmin',
   },

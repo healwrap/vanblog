@@ -15,14 +15,14 @@
 - `pnpm install`
 
 ## 启动 MongoDB（推荐 Docker，无需认证）
-- `docker run -d --name vanblog-mongo-dev -p 27018:27017 -e TZ=Asia/Shanghai mongo:4.4.16`
+- `docker run -d --name vanblog-mongo-dev -p 27017:27017 -e TZ=Asia/Shanghai mongo:4.4.16`
 - 如已有 Mongo 实例，可跳过本步骤，并在后续配置中改为你的连接串
 
 ## 最少配置
 在 `packages/server` 目录创建 `config.yaml`（服务端自动读取）
   ```yaml
   database:
-    url: "mongodb://127.0.0.1:27018/vanBlog"
+    url: "mongodb://127.0.0.1:27017/vanBlog"
   static:
     path: "/绝对路径/vanblog/.dev/static"
   codeRunner:
