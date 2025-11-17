@@ -150,3 +150,5 @@ log
 log/**
 
 docker-compose/data/*
+
+备份-2025-11-17.json

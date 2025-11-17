@@ -13,6 +13,10 @@ const rewites =
               destination: "http://127.0.0.1:8360/comment", // Proxy to Backend
             },
             {
+              source: "/comment/:path*",
+              destination: "http://127.0.0.1:8360/comment/:path*", // Proxy Waline root in dev
+            },
+            {
               source: "/api/:path*",
               destination: "http://127.0.0.1:3000/api/:path*", // Proxy to Backend
             },

@@ -29,6 +29,7 @@ import { StaticProvider } from 'src/provider/static/static.provider';
 import { SettingProvider } from 'src/provider/setting/setting.provider';
 import { config } from 'src/config';
 import { ApiToken } from 'src/provider/swagger/token';
+import { WalineProvider } from 'src/provider/waline/waline.provider';
 
 @ApiTags('backup')
 @UseGuards(...AdminGuard)
@@ -47,6 +48,7 @@ export class BackupController {
     private readonly visitProvider: VisitProvider,
     private readonly settingProvider: SettingProvider,
     private readonly staticProvider: StaticProvider,
+    private readonly walineProvider: WalineProvider,
   ) {}
 
   @Get('export')
@@ -62,6 +64,9 @@ export class BackupController {
     const visit = await this.visitProvider.getAll();
     // 设置表
     const staticSetting = await this.settingProvider.getStaticSetting();
+    const menuSetting = await this.settingProvider.getMenuSetting();
+    const layoutSetting = await this.settingProvider.getLayoutSetting();
+    const walineSetting = await this.settingProvider.getWalineSetting();
     const staticItems = await this.staticProvider.exportAll();
     const data = {
       articles,
@@ -73,7 +78,12 @@ export class BackupController {
       viewer,
       visit,
       static: staticItems,
-      setting: { static: staticSetting },
+      setting: {
+        static: staticSetting,
+        menu: menuSetting,
+        layout: layoutSetting,
+        waline: walineSetting,
+      },
     };
     // 拼接一个临时文件
     const name = `temp.json`;
@@ -99,7 +109,7 @@ export class BackupController {
     }
     const json = file.buffer.toString();
     const data = JSON.parse(json);
-    const { meta, user, setting } = data;
+    const { meta, user, setting, categories } = data;
     let { articles, drafts, viewer, visit, static: staticItems } = data;
     // 去掉 id
     articles = removeID(articles);
@@ -120,7 +130,13 @@ export class BackupController {
     await this.draftProvider.importDrafts(drafts);
     await this.userProvider.updateUser(user);
     await this.metaProvider.update(meta);
+    if (categories && categories.length) {
+      await this.categoryProvider.importCategories(categories);
+    }
     await this.settingProvider.importSetting(setting);
+    if (setting && setting.waline) {
+      await this.walineProvider.restart('导入评论设置');
+    }
     await this.staticProvider.importItems(staticItems);
     if (visit) {
       await this.visitProvider.import(visit);

@@ -99,6 +99,12 @@ export class SettingProvider {
     for (const [k, v] of Object.entries(setting)) {
       if (k == 'static') {
         await this.importStaticSetting(v as any);
+      } else if (k == 'menu') {
+        await this.updateMenuSetting(v as any);
+      } else if (k == 'layout') {
+        await this.updateLayoutSetting(v as any);
+      } else if (k == 'waline') {
+        await this.updateWalineSetting(v as any);
       }
     }
   }

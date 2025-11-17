@@ -10,6 +10,9 @@ import { message, Modal } from 'antd';
 import { useState } from 'react';
 export default function (props: {}) {
   const [enableEmail, setEnableEmail] = useState<any>(false);
+  const [akismetEnabled, setAkismetEnabled] = useState<boolean>(false);
+  const [akismetKey, setAkismetKey] = useState<string>('');
+  const [forbiddenWords, setForbiddenWords] = useState<string>('');
   return (
     <>
       <ProForm
@@ -19,6 +22,17 @@ export default function (props: {}) {
         request={async (params) => {
           const { data } = await getWalineConfig();
           setEnableEmail(data?.['smtp.enabled'] || false);
+          const oc = (() => {
+            try {
+              return data?.otherConfig ? JSON.parse(data.otherConfig) : {};
+            } catch (e) {
+              return {};
+            }
+          })();
+          const akOn = oc?.AKISMET_KEY && oc.AKISMET_KEY !== 'false';
+          setAkismetEnabled(Boolean(akOn));
+          setAkismetKey(akOn ? String(oc.AKISMET_KEY || '') : '');
+          setForbiddenWords(String(oc.FORBIDDEN_WORDS || ''));
           if (!data) {
             return {
               'smtp.enabled': false,
@@ -33,14 +47,31 @@ export default function (props: {}) {
             Modal.info({ title: '演示站禁止修改 waline 配置！' });
             return;
           }
+          let baseOC: any = {};
           if (data.otherConfig) {
             try {
-              JSON.parse(data.otherConfig);
+              baseOC = JSON.parse(data.otherConfig);
             } catch (err) {
               Modal.info({ title: '自定义环境变量不是合法 JSON 格式！' });
               return;
             }
           }
+          const newOC: any = { ...baseOC };
+          if (akismetEnabled) {
+            if (!akismetKey || akismetKey.trim() === '') {
+              Modal.info({ title: '请填写 Akismet Key 或关闭 Akismet 检测' });
+              return;
+            }
+            newOC.AKISMET_KEY = akismetKey.trim();
+          } else {
+            newOC.AKISMET_KEY = 'false';
+          }
+          if (forbiddenWords && forbiddenWords.trim() !== '') {
+            newOC.FORBIDDEN_WORDS = forbiddenWords.trim();
+          } else {
+            if (newOC.FORBIDDEN_WORDS) delete newOC.FORBIDDEN_WORDS;
+          }
+          data.otherConfig = JSON.stringify(newOC);
           setEnableEmail(data?.['smtp.enabled'] || false);
           await updateWalineConfig(data);
           message.success('更新成功！');
@@ -69,6 +100,42 @@ export default function (props: {}) {
           label="是否强制登录后评论"
           placeholder={'是否强制登录后评论，默认关闭'}
         ></ProFormSelect>
+        <ProFormSelect
+          fieldProps={{
+            options: [
+              { label: '开启', value: true as any },
+              { label: '关闭', value: false as any },
+            ],
+            value: akismetEnabled,
+            onChange: (v) => setAkismetEnabled(Boolean(v)),
+          }}
+          name="akismet.enabled"
+          label="Akismet 垃圾评论检测"
+          tooltip={'开启后使用 Akismet 服务判定垃圾评论。开发环境建议关闭。'}
+          placeholder={'默认关闭'}
+        ></ProFormSelect>
+        {akismetEnabled && (
+          <ProFormText
+            name="akismet.key"
+            label="Akismet Key"
+            tooltip={'在 Akismet 官网申请获得的 API Key。'}
+            placeholder="请输入 Akismet Key"
+            fieldProps={{
+              value: akismetKey,
+              onChange: (e) => setAkismetKey(e.target.value),
+            }}
+          />
+        )}
+        <ProFormText
+          name="forbidden.words"
+          label="违禁词（逗号分隔）"
+          tooltip={'填写后命中关键词的评论会被判为垃圾评论。例：word1,word2'}
+          placeholder="word1,word2"
+          fieldProps={{
+            value: forbiddenWords,
+            onChange: (e) => setForbiddenWords(e.target.value),
+          }}
+        />
         <ProFormSelect
           fieldProps={{
             onChange: (target) => {

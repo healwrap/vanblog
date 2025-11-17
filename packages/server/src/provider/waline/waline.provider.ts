@@ -5,6 +5,7 @@ import { WalineSetting } from 'src/types/setting.dto';
 import { makeSalt } from 'src/utils/crypto';
 import { MetaProvider } from '../meta/meta.provider';
 import { SettingProvider } from '../setting/setting.provider';
+import path from 'path';
 @Injectable()
 export class WalineProvider {
   // constructor() {}
@@ -76,8 +77,11 @@ export class WalineProvider {
   }
   async loadEnv() {
     const url = new URL(config.mongoUrl);
+    const isDev = process.env.NODE_ENV === 'development';
+    const host =
+      isDev && (url.hostname === 'mongo' || url.hostname === '') ? '127.0.0.1' : url.hostname;
     const mongoEnv = {
-      MONGO_HOST: url.hostname,
+      MONGO_HOST: host,
       MONGO_PORT: url.port,
       MONGO_USER: url.username,
       MONGO_PASSWORD: url.password,
@@ -97,6 +101,9 @@ export class WalineProvider {
       ...otherEnv,
       ...walineConfigEnv,
     };
+    if (!this.env['AKISMET_KEY']) {
+      this.env['AKISMET_KEY'] = 'false';
+    }
     this.logger.log(`waline 配置： ${JSON.stringify(this.env, null, 2)}`);
   }
   async init() {
@@ -119,7 +126,7 @@ export class WalineProvider {
   }
   async run(): Promise<any> {
     await this.loadEnv();
-    const base = '../waline/node_modules/@waline/vercel/vanilla.js';
+    const base = require.resolve('@waline/vercel/vanilla.js');
     if (this.ctx == null) {
       this.ctx = spawn('node', [base], {
         env: {

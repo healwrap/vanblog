@@ -81,6 +81,21 @@ export class UserProvider {
         .exec();
     }
   }
+  async createAdminFromBackup(updateUserDto: UpdateUserDto & { salt?: string }) {
+    const exist = await this.getUser();
+    if (exist) {
+      return await this.updateUser(updateUserDto);
+    }
+    const salt = updateUserDto.salt || makeSalt();
+    return await this.userModel.create({
+      id: 0,
+      type: 'admin',
+      name: updateUserDto.name,
+      nickname: updateUserDto.nickname,
+      password: updateUserDto.password,
+      salt,
+    });
+  }
   async getNewId() {
     const [lastUser] = await this.userModel.find({}).sort({ id: -1 }).limit(1);
     if (!lastUser) {

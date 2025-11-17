@@ -27,7 +27,7 @@ export default function (props: {
     return () => {
       if (props.enable && props.enable == "true") {
         if (props.visible) {
-          current.wa?.destroy();
+          // current.wa?.destroy();
         } else {
           current?.wa();
         }

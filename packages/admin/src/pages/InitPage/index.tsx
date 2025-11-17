@@ -2,7 +2,7 @@ import Footer from '@/components/Footer';
 import { fetchInit } from '@/services/van-blog/api';
 import ProCard from '@ant-design/pro-card';
 import { ProFormInstance } from '@ant-design/pro-form';
-import { Alert, Modal } from 'antd';
+import { Alert, Modal, Upload, Button, message, Space } from 'antd';
 import { useHistory } from 'umi';
 //@ts-ignore
 import styles from './index.less';
@@ -11,10 +11,12 @@ import { ProFormText, StepsForm } from '@ant-design/pro-components';
 
 import SiteInfoForm from '@/components/SiteInfoForm';
 import { encryptPwd } from '@/services/van-blog/encryptPwd';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 const InitPage = () => {
   const history = useHistory();
+  const [mode, setMode] = useState<'select' | 'setup'>('select');
+  const [restoring, setRestoring] = useState(false);
   const formMapRef = useRef<React.MutableRefObject<ProFormInstance<any> | undefined>[]>([]);
   const formRef1 = useRef<ProFormInstance>();
   const formRef2 = useRef<ProFormInstance>();
@@ -35,12 +37,43 @@ const InitPage = () => {
             </div>
           }
         >
-          <StepsForm
-            formMapRef={formMapRef}
-            onFinish={async (values) => {
-              const { name, password, ...siteInfo } = values;
-              const newData = {
-                user: {
+          {mode === 'select' && (
+            <ProCard style={{ marginBottom: 16 }}>
+              <Alert type="info" message="选择一种初始化方式" style={{ marginBottom: 8 }} />
+              <Space>
+                <Upload
+                  showUploadList={false}
+                  name="file"
+                  accept=".json"
+                  action="/api/admin/init/restore"
+                  disabled={restoring}
+                  onChange={(info) => {
+                    if (info.file.status === 'uploading') {
+                      setRestoring(true);
+                      message.loading({ content: '正在恢复备份…', key: 'restore', duration: 0 });
+                    } else if (info.file.status === 'done') {
+                      setRestoring(false);
+                      message.success({ content: '备份恢复成功！', key: 'restore' });
+                      history.push('/welcome');
+                    } else if (info.file.status === 'error') {
+                      setRestoring(false);
+                      message.error({ content: '备份恢复失败', key: 'restore' });
+                    }
+                  }}
+                >
+                  <Button type="primary" disabled={restoring}>使用备份数据恢复</Button>
+                </Upload>
+                <Button onClick={() => setMode('setup')} disabled={restoring}>配置新系统</Button>
+              </Space>
+            </ProCard>
+          )}
+          {mode === 'setup' && (
+            <StepsForm
+              formMapRef={formMapRef}
+              onFinish={async (values) => {
+                const { name, password, ...siteInfo } = values;
+                const newData = {
+                  user: {
                   username: name,
                   password: encryptPwd(name, password),
                 },
@@ -63,7 +96,17 @@ const InitPage = () => {
               }
               return false;
             }}
-          >
+              submitter={{
+                render: (props, dom) => (
+                  <Space>
+                    {props?.step === 0 && (
+                      <Button key="back" onClick={() => setMode('select')}>上一步</Button>
+                    )}
+                    {Array.isArray(dom) ? dom : [dom]}
+                  </Space>
+                ),
+              }}
+            >
             <StepsForm.StepForm name="step1" title="配置用户">
               <Alert
                 type="info"
@@ -159,7 +202,8 @@ const InitPage = () => {
                 form={null}
               />
             </StepsForm.StepForm>
-          </StepsForm>
+            </StepsForm>
+          )}
         </ProCard>
       </div>
       <Footer />

@@ -123,6 +123,10 @@ export class MetaProvider {
   async update(updateMetaDto: Partial<Meta>) {
     return this.metaModel.updateOne({}, updateMetaDto);
   }
+  async create(dto: Partial<Meta>) {
+    const created = new this.metaModel(dto as any);
+    return created.save();
+  }
   async getAbout() {
     return (await this.getAll())?.about;
   }

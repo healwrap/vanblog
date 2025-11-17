@@ -40,11 +40,8 @@ export const loadConfig = (key: string, defaultValue?: any) => {
       .split('.')
       .map((x) => x.toUpperCase())
       .join('_');
-  console.log(envKey);
   if (typeof defaultValue !== 'function') {
-    const res = process.env[envKey] || _.get(config, key, defaultValue);
-    console.log(res);
-    return res;
+    return process.env[envKey] || _.get(config, key, defaultValue);
   } else {
     return process.env[envKey] || _.get(config, key, false) || defaultValue();
   }

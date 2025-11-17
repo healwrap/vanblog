@@ -126,4 +126,21 @@ export class CategoryProvider {
       },
     );
   }
+  async importCategories(categories: (string | Partial<CategoryDocument>)[]) {
+    if (!categories || categories.length === 0) return;
+    for (const c of categories) {
+      const name = typeof c === 'string' ? c : (c as any)?.name;
+      if (!name) continue;
+      const exist = await this.categoryModal.findOne({ name });
+      if (!exist) {
+        await this.categoryModal.create({
+          id: await this.getNewId(),
+          name,
+          type: 'category',
+          private: false,
+          password: '',
+        });
+      }
+    }
+  }
 }
