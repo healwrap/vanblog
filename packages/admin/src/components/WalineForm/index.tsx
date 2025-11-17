@@ -13,6 +13,7 @@ export default function (props: {}) {
   const [akismetEnabled, setAkismetEnabled] = useState<boolean>(false);
   const [akismetKey, setAkismetKey] = useState<string>('');
   const [forbiddenWords, setForbiddenWords] = useState<string>('');
+  const [ipqps, setIpqps] = useState<number>();
   return (
     <>
       <ProForm
@@ -22,17 +23,13 @@ export default function (props: {}) {
         request={async (params) => {
           const { data } = await getWalineConfig();
           setEnableEmail(data?.['smtp.enabled'] || false);
-          const oc = (() => {
-            try {
-              return data?.otherConfig ? JSON.parse(data.otherConfig) : {};
-            } catch (e) {
-              return {};
-            }
-          })();
-          const akOn = oc?.AKISMET_KEY && oc.AKISMET_KEY !== 'false';
+          const akOn = data?.['akismet.enabled'] && data['akismet.enabled'] !== false
+            ? true
+            : Boolean(data?.['akismet.key'] && data['akismet.key'] !== 'false');
           setAkismetEnabled(Boolean(akOn));
-          setAkismetKey(akOn ? String(oc.AKISMET_KEY || '') : '');
-          setForbiddenWords(String(oc.FORBIDDEN_WORDS || ''));
+          setAkismetKey(String(data?.['akismet.key'] || ''));
+          setForbiddenWords(String(data?.['forbidden.words'] || ''));
+          setIpqps(Number(data?.ipqps ?? 60));
           if (!data) {
             return {
               'smtp.enabled': false,
@@ -56,21 +53,17 @@ export default function (props: {}) {
               return;
             }
           }
-          const newOC: any = { ...baseOC };
           if (akismetEnabled) {
             if (!akismetKey || akismetKey.trim() === '') {
               Modal.info({ title: '请填写 Akismet Key 或关闭 Akismet 检测' });
               return;
             }
-            newOC.AKISMET_KEY = akismetKey.trim();
-          } else {
-            newOC.AKISMET_KEY = 'false';
           }
-          if (forbiddenWords && forbiddenWords.trim() !== '') {
-            newOC.FORBIDDEN_WORDS = forbiddenWords.trim();
-          } else {
-            if (newOC.FORBIDDEN_WORDS) delete newOC.FORBIDDEN_WORDS;
-          }
+          const newOC: any = { ...baseOC };
+          data['akismet.enabled'] = akismetEnabled as any;
+          data['akismet.key'] = akismetKey?.trim();
+          data['forbidden.words'] = forbiddenWords?.trim();
+          data['ipqps'] = ipqps as any;
           data.otherConfig = JSON.stringify(newOC);
           setEnableEmail(data?.['smtp.enabled'] || false);
           await updateWalineConfig(data);
@@ -100,6 +93,15 @@ export default function (props: {}) {
           label="是否强制登录后评论"
           placeholder={'是否强制登录后评论，默认关闭'}
         ></ProFormSelect>
+        <ProFormDigit
+          name="ipqps"
+          label="评论间隔（秒）"
+          placeholder="10"
+          fieldProps={{
+            value: ipqps,
+            onChange: (v) => setIpqps(Number(v)),
+          }}
+        />
         <ProFormSelect
           fieldProps={{
             options: [

@@ -7260,7 +7260,7 @@ packages:
     resolution: {integrity: sha512-ELCPqAdroMdcuxqwMgUpifQyRoTpyYCNr1V9xKyF40VsBobsj+BbWNRvwGchMgBPGqkw655ypkjj2MEF5ywVwg==}
     deprecated: This is a stub types definition. bson provides its own type definitions, so you do not need this installed.
     dependencies:
-      bson: 6.2.0
+      bson: 7.0.0
     dev: false
 
   /@types/chai-subset@1.3.5:
@@ -11346,9 +11346,9 @@ packages:
     engines: {node: '>=14.20.1'}
     dev: false
 
-  /bson@6.2.0:
-    resolution: {integrity: sha512-ID1cI+7bazPDyL9wYy9GaQ8gEEohWvcUl/Yf0dIdutJxnmInEEyCsb4awy/OiBfall7zBA179Pahi3vCdFze3Q==}
-    engines: {node: '>=16.20.1'}
+  /bson@7.0.0:
+    resolution: {integrity: sha512-Kwc6Wh4lQ5OmkqqKhYGKIuELXl+EPYSCObVE6bWsp1T/cGkOCBN0I8wF/T44BiuhHyNi1mmKVPXk60d41xZ7kw==}
+    engines: {node: '>=20.19.0'}
     dev: false
 
   /btoa@1.2.1:

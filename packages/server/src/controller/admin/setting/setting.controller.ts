@@ -67,15 +67,7 @@ export class SettingController {
       };
     }
     const res = await this.settingProvider.getWalineSetting();
-    let data = res;
-    try {
-      const oc = res?.otherConfig ? JSON.parse(res.otherConfig as any) : {};
-      if (oc && typeof oc === 'object') {
-        delete oc['AKISMET_KEY'];
-        delete oc['FORBIDDEN_WORDS'];
-        data = { ...(res as any), otherConfig: JSON.stringify(oc) } as any;
-      }
-    } catch (e) {}
+    const data = res as any;
     return {
       statusCode: 200,
       data,

@@ -14,7 +14,6 @@ import { ISRProvider } from 'src/provider/isr/isr.provider';
 import { StaticProvider } from 'src/provider/static/static.provider';
 import { ApiToken } from 'src/provider/swagger/token';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { removeID } from 'src/utils/removeId';
 import { ArticleProvider } from 'src/provider/article/article.provider';
 import { DraftProvider } from 'src/provider/draft/draft.provider';
 import { MetaProvider } from 'src/provider/meta/meta.provider';
@@ -24,6 +23,7 @@ import { VisitProvider } from 'src/provider/visit/visit.provider';
 import { ViewerProvider } from 'src/provider/viewer/viewer.provider';
 import { CategoryProvider } from 'src/provider/category/category.provider';
 import { WalineProvider } from 'src/provider/waline/waline.provider';
+import { restoreBackup } from 'src/utils/restore';
 
 @ApiTags('init')
 @ApiToken
@@ -101,54 +101,23 @@ export class InitController {
     this.isRestoring = true;
     const json = file.buffer.toString();
     const data = JSON.parse(json);
-    const { meta, user, setting, categories } = data;
-    let { articles, drafts, viewer, visit, static: staticItems } = data;
-    articles = removeID(articles || []);
-    drafts = removeID(drafts || []);
-    viewer = removeID(viewer || []);
-    visit = removeID(visit || []);
-    if (staticItems) {
-      staticItems = removeID(staticItems);
-    }
-    if (setting && setting.static) {
-      setting.static = { ...setting.static, _id: undefined, __v: undefined };
-    }
-    if (user) {
-      delete user._id;
-      delete user.__v;
-      await this.userProvider.createAdminFromBackup({
-        id: 0,
-        name: user.name,
-        password: user.password,
-        nickname: user.nickname,
-        salt: user.salt,
-      } as any);
-    }
-    if (meta) {
-      delete meta._id;
-      const oldMeta = await this.metaProvider.getAll();
-      if (oldMeta) {
-        await this.metaProvider.update(meta);
-      } else {
-        await this.metaProvider.create(meta);
-      }
-    }
-    await this.articleProvider.importArticles(articles || []);
-    await this.draftProvider.importDrafts(drafts || []);
-    if (categories && categories.length) {
-      await this.categoryModalImport(categories);
-    }
-    await this.settingProvider.importSetting(setting || {});
-    if (setting && setting.waline) {
-      await this.walineProvider.restart('初始化恢复评论设置');
-    }
-    await this.staticProvider.importItems(staticItems || []);
-    if (visit) {
-      await this.visitProvider.import(visit);
-    }
-    if (viewer) {
-      await this.viewerProvider.import(viewer);
-    }
+    await restoreBackup({
+      data,
+      mode: 'init',
+      walineRestartReason: '初始化恢复评论设置',
+      providers: {
+        articleProvider: this.articleProvider,
+        draftProvider: this.draftProvider,
+        userProvider: this.userProvider,
+        metaProvider: this.metaProvider,
+        settingProvider: this.settingProvider,
+        categoryProvider: this.categoryProvider,
+        walineProvider: this.walineProvider,
+        staticProvider: this.staticProvider,
+        visitProvider: this.visitProvider,
+        viewerProvider: this.viewerProvider,
+      },
+    });
     try {
       await this.isrProvider.activeAll('初始化恢复触发增量渲染！', undefined, {
         forceActice: true,

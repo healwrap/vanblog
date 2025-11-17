@@ -75,6 +75,10 @@ export interface WalineSetting {
   'sender.name': string;
   'sender.email': string;
   authorEmail: string;
+  'akismet.enabled'?: boolean;
+  'akismet.key'?: string;
+  'forbidden.words'?: string;
+  ipqps?: number;
   webhook?: string;
   forceLoginComment: boolean;
   otherConfig?: string;

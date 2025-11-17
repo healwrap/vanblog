@@ -1,9 +1,7 @@
 import {
-  Body,
   Controller,
   Get,
   Post,
-  Put,
   Res,
   UploadedFile,
   UseGuards,
@@ -20,9 +18,7 @@ import { MetaProvider } from 'src/provider/meta/meta.provider';
 import { TagProvider } from 'src/provider/tag/tag.provider';
 import { UserProvider } from 'src/provider/user/user.provider';
 import * as fs from 'fs';
-import * as dayjs from 'dayjs';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { removeID } from 'src/utils/removeId';
 import { ViewerProvider } from 'src/provider/viewer/viewer.provider';
 import { VisitProvider } from 'src/provider/visit/visit.provider';
 import { StaticProvider } from 'src/provider/static/static.provider';
@@ -30,6 +26,7 @@ import { SettingProvider } from 'src/provider/setting/setting.provider';
 import { config } from 'src/config';
 import { ApiToken } from 'src/provider/swagger/token';
 import { WalineProvider } from 'src/provider/waline/waline.provider';
+import { restoreBackup } from 'src/utils/restore';
 
 @ApiTags('backup')
 @UseGuards(...AdminGuard)
@@ -67,7 +64,11 @@ export class BackupController {
     const menuSetting = await this.settingProvider.getMenuSetting();
     const layoutSetting = await this.settingProvider.getLayoutSetting();
     const walineSetting = await this.settingProvider.getWalineSetting();
+    const walineComments = await this.walineProvider.exportComments();
     const staticItems = await this.staticProvider.exportAll();
+    if (menuSetting && (menuSetting as any).data) {
+      meta.menus = (menuSetting as any).data;
+    }
     const data = {
       articles,
       tags,
@@ -80,9 +81,11 @@ export class BackupController {
       static: staticItems,
       setting: {
         static: staticSetting,
-        menu: menuSetting,
         layout: layoutSetting,
         waline: walineSetting,
+      },
+      waline: {
+        comments: walineComments,
       },
     };
     // 拼接一个临时文件
@@ -109,41 +112,23 @@ export class BackupController {
     }
     const json = file.buffer.toString();
     const data = JSON.parse(json);
-    const { meta, user, setting, categories } = data;
-    let { articles, drafts, viewer, visit, static: staticItems } = data;
-    // 去掉 id
-    articles = removeID(articles);
-    drafts = removeID(drafts);
-    viewer = removeID(viewer);
-    visit = removeID(visit);
-    if (staticItems) {
-      staticItems = removeID(staticItems);
-    }
-    if (setting && setting.static) {
-      setting.static = { ...setting.static, _id: undefined, __v: undefined };
-    }
-    delete user._id;
-    delete user.__v;
-    delete meta._id;
-
-    await this.articleProvider.importArticles(articles);
-    await this.draftProvider.importDrafts(drafts);
-    await this.userProvider.updateUser(user);
-    await this.metaProvider.update(meta);
-    if (categories && categories.length) {
-      await this.categoryProvider.importCategories(categories);
-    }
-    await this.settingProvider.importSetting(setting);
-    if (setting && setting.waline) {
-      await this.walineProvider.restart('导入评论设置');
-    }
-    await this.staticProvider.importItems(staticItems);
-    if (visit) {
-      await this.visitProvider.import(visit);
-    }
-    if (viewer) {
-      await this.viewerProvider.import(viewer);
-    }
+    await restoreBackup({
+      data,
+      mode: 'import',
+      walineRestartReason: '导入评论设置',
+      providers: {
+        articleProvider: this.articleProvider,
+        draftProvider: this.draftProvider,
+        userProvider: this.userProvider,
+        metaProvider: this.metaProvider,
+        settingProvider: this.settingProvider,
+        categoryProvider: this.categoryProvider,
+        walineProvider: this.walineProvider,
+        staticProvider: this.staticProvider,
+        visitProvider: this.visitProvider,
+        viewerProvider: this.viewerProvider,
+      },
+    });
     return {
       statusCode: 200,
       data: '导入成功！',

@@ -5,7 +5,7 @@ import { WalineSetting } from 'src/types/setting.dto';
 import { makeSalt } from 'src/utils/crypto';
 import { MetaProvider } from '../meta/meta.provider';
 import { SettingProvider } from '../setting/setting.provider';
-import path from 'path';
+import { MongoClient, Db, ObjectId } from 'mongodb';
 @Injectable()
 export class WalineProvider {
   // constructor() {}
@@ -28,6 +28,9 @@ export class WalineProvider {
       authorEmail: 'AUTHOR_EMAIL',
       webhook: 'WEBHOOK',
       forceLoginComment: 'LOGIN',
+      'forbidden.words': 'FORBIDDEN_WORDS',
+      ipqps: 'IPQPS',
+      'akismet.key': 'AKISMET_KEY',
     };
     const result = {};
     if (!config) {
@@ -37,6 +40,10 @@ export class WalineProvider {
       if (key == 'forceLoginComment') {
         if (config.forceLoginComment) {
           result['LOGIN'] = 'force';
+        }
+      } else if (key == 'akismet.enabled') {
+        if (config['akismet.enabled'] === false) {
+          result['AKISMET_KEY'] = 'false';
         }
       } else if (key == 'otherConfig') {
         if (config.otherConfig) {
@@ -50,7 +57,9 @@ export class WalineProvider {
       } else {
         const rKey = walineEnvMapping[key];
         if (rKey) {
-          result[rKey] = config[key];
+          const val = (config as any)[key];
+          result[rKey] = typeof val === 'number' ? String(val) : val;
+          console.log(rKey, result[rKey]);
         }
       }
     }
@@ -158,5 +167,73 @@ export class WalineProvider {
       await this.run();
     }
     this.logger.log('Waline 启动成功！');
+  }
+
+  async getWalineDB(): Promise<Db> {
+    const client = new MongoClient(config.mongoUrl);
+    await client.connect();
+    return client.db(config.walineDB);
+  }
+
+  async resolveCommentsCollectionNames(db: Db): Promise<string[]> {
+    const cols = await db.listCollections().toArray();
+    const names = cols.map((c) => c.name);
+    const priority = ['Comment', 'Comments', 'comment', 'comments'];
+    const existing = priority.filter((n) => names.includes(n));
+    if (existing.length) return existing;
+    const fuzzy = names.filter((n) => n.toLowerCase().includes('comment'));
+    return fuzzy.length ? fuzzy : ['Comment'];
+  }
+
+  async exportComments(): Promise<any[]> {
+    const db = await this.getWalineDB();
+    const colNames = await this.resolveCommentsCollectionNames(db);
+    const primary = colNames[0];
+    const cursor = db.collection(primary).aggregate([
+      {
+        $replaceRoot: {
+          newRoot: {
+            $arrayToObject: {
+              $map: {
+                input: { $objectToArray: '$$ROOT' },
+                as: 'kv',
+                in: {
+                  k: '$$kv.k',
+                  v: {
+                    $cond: [
+                      { $eq: [{ $type: '$$kv.v' }, 'objectId'] },
+                      { $toString: '$$kv.v' },
+                      '$$kv.v',
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ]);
+    const list = await cursor.toArray();
+    return list;
+  }
+
+  async importComments(docs: any[]): Promise<void> {
+    if (!docs || !docs.length) return;
+    const db = await this.getWalineDB();
+    const colNames = await this.resolveCommentsCollectionNames(db);
+    const deserialized = docs.map((d) => {
+      const r = { ...d };
+      for (const k of Object.keys(r)) {
+        const v = r[k];
+        if (typeof v === 'string' && /^[a-fA-F0-9]{24}$/.test(v)) {
+          r[k] = new ObjectId(v);
+        }
+      }
+      return r;
+    });
+    for (const name of colNames) {
+      await db.collection(name).deleteMany({});
+      await db.collection(name).insertMany(deserialized);
+    }
   }
 }
