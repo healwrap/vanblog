@@ -1,0 +1,43 @@
+@import (reference) '~antd/es/style/themes/index';
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: auto;
+  background: @layout-body-background;
+  justify-content: center;
+}
+
+.content {
+  flex: 0;
+  padding: 32px 0;
+  transform: translateY(-10%);
+}
+
+@media (min-width: @screen-md-min) {
+  .container {
+    background-image: url('/background.svg');
+    background-repeat: no-repeat;
+    background-position: center 110px;
+    background-size: 100%;
+  }
+
+  .content {
+    padding: 32px 0 24px;
+  }
+}
+
+.icon {
+  margin-left: 8px;
+  color: rgba(0, 0, 0, 0.2);
+  font-size: 24px;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: @primary-color;
+  }
+}
