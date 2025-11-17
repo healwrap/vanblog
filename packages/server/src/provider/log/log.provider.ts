@@ -13,10 +13,13 @@ import { CodeResult } from '../pipeline/pipeline.provider';
 @Injectable()
 export class LogProvider {
   logger = null;
-  logPath = path.join(config.log, 'vanblog-event.log');
-  systemLogPath = path.join('/var/log/', 'vanblog-stdio.log');
+  logDir = '';
+  logPath = '';
   constructor() {
-    checkOrCreate(config.log);
+    const isProd = process.env.NODE_ENV === 'production';
+    this.logDir = isProd ? config.log : path.join(process.cwd(), 'packages', 'server', 'log');
+    checkOrCreate(this.logDir);
+    this.logPath = path.join(this.logDir, 'vanblog-event.log');
     const streams = [
       {
         stream: fs.createWriteStream(this.logPath, {
@@ -26,14 +29,9 @@ export class LogProvider {
       { stream: process.stdout },
     ];
     this.logger = pino({ level: 'debug' }, pino.multistream(streams));
-    this.logger.info({ event: 'start' });
+    this.logger.info({ event: EventType.SYSTEM, message: 'start' });
   }
-  async runPipeline(
-    pipeline: Pipeline,
-    input: any,
-    result?: CodeResult,
-    error?: Error,
-  ) {
+  async runPipeline(pipeline: Pipeline, input: any, result?: CodeResult, error?: Error) {
     this.logger.info({
       event: EventType.RUN_PIPELINE,
       pipelineId: pipeline.id,
@@ -65,28 +63,37 @@ export class LogProvider {
       return new Promise((resolve) => {
         const res = [];
         let total = 0;
-        lineReader.eachLine(
-          eventType == EventType.SYSTEM ? this.systemLogPath : this.logPath,
-          (line: string, last: boolean) => {
-            let data: any = line;
-            if (eventType !== EventType.SYSTEM) {
-              data = JSON.parse(line);
+        const filePath = this.logPath;
+        if (!fs.existsSync(filePath)) {
+          resolve({ data: [], total: 0 });
+          return;
+        }
+        lineReader.eachLine(filePath, (line: string, last: boolean) => {
+          let data: any = line;
+          try {
+            data = JSON.parse(line);
+          } catch (_) {
+            data = null;
+          }
+          if (
+            data &&
+            (eventType === EventType.SYSTEM
+              ? data.event === EventType.SYSTEM
+              : data.event == eventType)
+          ) {
+            total = total + 1;
+            if (res.length >= all) {
+              res.shift();
             }
-            if (eventType === EventType.SYSTEM || data.event == eventType) {
-              total = total + 1;
-              if (res.length >= all) {
-                res.shift();
-              }
-              res.push(data);
-            }
-            if (!line || line.trim() == '' || line == '\n') {
-              resolve({ data: res, total });
-            }
-            if (last) {
-              resolve({ data: res, total });
-            }
-          },
-        );
+            res.push(data);
+          }
+          if (!line || line.trim() == '' || line == '\n') {
+            resolve({ data: res, total });
+          }
+          if (last) {
+            resolve({ data: res, total });
+          }
+        });
       });
     };
     let { data, total } = (await readFunc(eventType)) as {

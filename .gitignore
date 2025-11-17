@@ -1,5 +1,5 @@
 # Logs
-logs
+.dev/*
 *.log
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
@@ -146,8 +146,7 @@ docs/.vuepress/dist/
 temp.json
 staticFolder
 localBuild.sh
-log
-log/**
+/log/
 
 docker-compose/data/*
 

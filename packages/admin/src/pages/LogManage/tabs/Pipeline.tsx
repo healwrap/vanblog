@@ -2,7 +2,7 @@ import { getLog, getPipelineConfig } from '@/services/van-blog/api';
 import { ProTable } from '@ant-design/pro-components';
 import { Modal, Tag } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { useHistory } from 'umi';
 
 export default function () {
   const actionRef = useRef();
@@ -35,6 +35,7 @@ export default function () {
       render: (name, record) => (
         <a
           onClick={() => {
+            const history = useHistory();
             history.push('/code?type=pipeline&id=' + record.pipelineId);
           }}
         >
@@ -84,8 +85,8 @@ export default function () {
                   >
                     <p>脚本日志：</p>
                     <pre>
-                      {record.logs.map((l) => (
-                        <p>{l}</p>
+                      {record.logs.map((l, i) => (
+                        <p key={i}>{typeof l === 'string' ? l : JSON.stringify(l)}</p>
                       ))}
                     </pre>
                     <p>输入：</p>
@@ -109,11 +110,11 @@ export default function () {
         // ghost
         cardBordered
         rowKey="time"
-        columns={columns}
+        columns={columns as any}
         search={false}
         dateFormatter="string"
         actionRef={actionRef}
-        options={true}
+        options={{}}
         headerTitle="流水线日志"
         pagination={{
           pageSize: 10,

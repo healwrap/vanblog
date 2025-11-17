@@ -11,7 +11,10 @@ export default function () {
   const fetchLog = async () => {
     try {
       const { data } = await getLog('system', 1, 1000);
-      const logString = data.data.reverse().join('\n');
+      const logString = data.data
+        .reverse()
+        .map((item: any) => (typeof item === 'string' ? item : JSON.stringify(item)))
+        .join('\n');
       setContent(logString);
     } catch (err) {
     } finally {
@@ -23,7 +26,7 @@ export default function () {
       .then(() => {
         setTimeout(() => {
           if (domRef.current) {
-            domRef.current.scrollTop = domRef.current?.scrollHeight;
+            (domRef.current as HTMLPreElement).scrollTop = (domRef.current as HTMLPreElement).scrollHeight;
           }
         }, 10);
       })
@@ -48,7 +51,7 @@ export default function () {
                 setLoading(false);
                 setTimeout(() => {
                   if (domRef.current) {
-                    domRef.current.scrollTop = domRef.current?.scrollHeight;
+                    (domRef.current as HTMLPreElement).scrollTop = (domRef.current as HTMLPreElement).scrollHeight;
                   }
                 }, 10);
               });
