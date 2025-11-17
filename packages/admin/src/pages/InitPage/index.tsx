@@ -23,6 +23,7 @@ const InitPage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
+        <div className={styles.centerCard}>
         <ProCard
           title={
             <div>
@@ -107,7 +108,7 @@ const InitPage = () => {
                 ),
               }}
             >
-            <StepsForm.StepForm name="step1" title="配置用户">
+            <StepsForm.StepForm name="step1" title="配置用户" layout="vertical">
               <Alert
                 type="info"
                 message="初始化页面所有配置都可在初始化后进入后台修改。"
@@ -139,6 +140,7 @@ const InitPage = () => {
               name="step2"
               title={'基本配置'}
               formRef={formRef1}
+              layout="vertical"
               onFinish={async (values) => {
                 let ok = true;
                 try {
@@ -174,7 +176,7 @@ const InitPage = () => {
                 isInit={true}
               />
             </StepsForm.StepForm>
-            <StepsForm.StepForm name="step3" title={'高级配置'} formRef={formRef2}>
+            <StepsForm.StepForm name="step3" title={'高级配置'} formRef={formRef2} layout="vertical">
               <Alert
                 type="info"
                 message="默认的上传图片会到内置图床，如需配置 oss 图床，可在初始化后去设置页更改。初始化页面所有配置都可在初始化后进入后台修改。"
@@ -188,7 +190,7 @@ const InitPage = () => {
                 isInit={true}
               />
             </StepsForm.StepForm>
-            <StepsForm.StepForm name="step4" title={'布局配置'}>
+            <StepsForm.StepForm name="step4" title={'布局配置'} layout="vertical">
               <Alert
                 type="info"
                 message="初始化页面所有配置都可在初始化后进入后台修改。"
@@ -205,6 +207,7 @@ const InitPage = () => {
             </StepsForm>
           )}
         </ProCard>
+        </div>
       </div>
       <Footer />
     </div>
