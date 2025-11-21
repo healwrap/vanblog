@@ -18,6 +18,11 @@ export default function (props: {
   title: string;
   sideBar: any;
   children: any;
+  sidePosition?: "left" | "right";
+  hideFooter?: boolean;
+  navAutoHide?: boolean;
+  /** 首页等需要更大内容宽度时设置为 true；其他页面默认使用较小的最大宽度 */
+  wide?: boolean;
 }) {
   // console.log("css", props.option.customCss);
   // console.log("html", props.option.customHtml);
@@ -89,6 +94,7 @@ export default function (props: {
             setOpen={setIsOpen}
             logoDark={props.option.logoDark}
             showFriends={props.option.showFriends}
+            autoHide={props.navAutoHide !== false}
           ></NavBar>
           <NavBarMobile
             isOpen={isOpen}
@@ -97,18 +103,28 @@ export default function (props: {
             showFriends={props.option.showFriends}
             menus={props.option.menus}
           />
-          <div className="flex-1 w-full max-w-screen-2xl mx-auto lg:px-6 md:py-4 py-2 px-2 md:px-4 text-gray-700">
-            <LayoutBody children={props.children} sideBar={props.sideBar} />
+          <div
+            className={`flex-1 w-full mx-auto lg:px-2 lg:py-4 py-2 px-2 text-gray-700 ${
+              props.wide ? "max-w-screen-2xl" : "max-w-[1000px]"
+            }`}
+          >
+            <LayoutBody
+              children={props.children}
+              sideBar={props.sideBar}
+              sidePosition={props.sidePosition}
+            />
           </div>
-          <Footer
-            ipcHref={props.option.ipcHref}
-            ipcNumber={props.option.ipcNumber}
-            since={props.option.since}
-            version={props.option.version}
-            gaBeianLogoUrl={props.option.gaBeianLogoUrl}
-            gaBeianNumber={props.option.gaBeianNumber}
-            gaBeianUrl={props.option.gaBeianUrl}
-          />
+          {!props.hideFooter && (
+            <Footer
+              ipcHref={props.option.ipcHref}
+              ipcNumber={props.option.ipcNumber}
+              since={props.option.since}
+              version={props.option.version}
+              gaBeianLogoUrl={props.option.gaBeianLogoUrl}
+              gaBeianNumber={props.option.gaBeianNumber}
+              gaBeianUrl={props.option.gaBeianUrl}
+            />
+          )}
           </div>
         {/* </ImageProvider> */}
       </ThemeContext.Provider>

@@ -24,13 +24,14 @@ export async function getIndexPageProps(): Promise<IndexPageProps> {
   const authorCardProps = getAuthorCardProps(data);
   const { articles } = await getArticlesByOption({
     page: 1,
-    pageSize: 5,
+    pageSize: 10,
   });
   return {
     layoutProps,
     articles,
     currPage: 1,
     authorCardProps,
+    tags: data.tags,
   };
 }
 

@@ -26,6 +26,7 @@ export default function (props: {
   defaultTheme: "dark" | "auto" | "light";
   subMenuOffset: number;
   openArticleLinksInNewWindow: boolean;
+  autoHide?: boolean;
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [headroom, setHeadroom] = useState<Headroom>();
@@ -38,16 +39,19 @@ export default function (props: {
     return props.logo;
   }, [theme, props]);
   useEffect(() => {
+    if (props.autoHide === false) {
+      return;
+    }
     const el = document.querySelector("#nav");
     if (el && !headroom) {
-      const headroom = new Headroom(el);
-      headroom.init();
-      setHeadroom(headroom);
+      const hr = new Headroom(el);
+      hr.init();
+      setHeadroom(hr);
     }
     return () => {
       headroom?.destroy();
     };
-  }, [headroom, setHeadroom]);
+  }, [headroom, setHeadroom, props.autoHide]);
 
   return (
     <>
@@ -68,7 +72,7 @@ export default function (props: {
         >
           <div className="mx-4 flex items-center">
             <div
-              className="cursor-pointer block md:hidden"
+              className="cursor-pointer block xl:hidden"
               onClick={() => {
                 if (!props.isOpen) {
                   // 要打开
@@ -95,7 +99,7 @@ export default function (props: {
               </span>
             </div>
             {props.headerLeftContent == "siteLogo" && (
-              <div className="hidden md:block transform translate-x-2">
+              <div className="hidden xl:block transform translate-x-2">
                 <img
                   alt="site logo"
                   src={picUrl}
@@ -108,7 +112,7 @@ export default function (props: {
           </div>
           {props.headerLeftContent == "siteName" && (
             <Link href="/">
-              <div className="text-gray-800 cursor-pointer select-none text-lg dark:text-dark lg:text-xl font-medium  mr-4 hidden md:block">
+              <div className="text-gray-800 cursor-pointer select-none text-lg dark:text-dark lg:text-xl font-medium  mr-4 hidden xl:block">
                 {props.siteName}
               </div>
             </Link>
@@ -117,13 +121,13 @@ export default function (props: {
           <div className="flex justify-between h-full flex-grow nav-content">
             <div
               style={{ transform: "translateX(30px)" }}
-              className="cursor-pointer md:hidden  flex-grow text-center  flex items-center justify-center select-none dark:text-dark"
+              className="cursor-pointer xl:hidden  flex-grow text-center  flex items-center justify-center select-none dark:text-dark"
             >
               <Link href="/">
                 <div>{props.siteName}</div>
               </Link>
             </div>
-            <ul className=" md:flex h-full items-center  text-sm text-gray-600 dark:text-dark hidden">
+            <ul className=" xl:flex h-full items-center  text-sm text-gray-600 dark:text-dark hidden">
               {props.menus.map((m) => {
                 return <Item key={m.id} item={m} />;
               })}
@@ -169,7 +173,7 @@ export default function (props: {
           </div>
         </div>
         {Boolean(props.categories.length) && props.showSubMenu == "true" && (
-          <div className="h-10 items-center hidden md:flex border-b border-gray-200 dark:border-nav-dark overflow-hidden">
+          <div className="h-10 items-center hidden xl:flex border-b border-gray-200 dark:border-nav-dark overflow-hidden">
             <div
               className="mx-5"
               style={{ width: 52 + props.subMenuOffset }}

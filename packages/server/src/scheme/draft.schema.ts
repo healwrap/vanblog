@@ -23,6 +23,9 @@ export class Draft extends Document {
   @Prop({ index: true })
   category: string;
 
+  @Prop({ default: '' })
+  cover: string;
+
   @Prop({ default: false, index: true })
   deleted: boolean;
 

@@ -29,6 +29,7 @@ export class DraftProvider {
     author: 1,
     id: 1,
     _id: 0,
+    cover: 1,
   };
 
   adminView = {
@@ -41,6 +42,7 @@ export class DraftProvider {
     author: 1,
     id: 1,
     _id: 0,
+    cover: 1,
   };
 
   listView = {
@@ -52,6 +54,7 @@ export class DraftProvider {
     author: 1,
     id: 1,
     _id: 0,
+    cover: 1,
   };
 
   getView(view: DraftView) {
@@ -175,6 +178,7 @@ export class DraftProvider {
       tags: draft.tags,
       category: draft.category,
       author: draft.author,
+      cover: draft.cover,
     };
     for (const [k, v] of Object.entries(options || {})) {
       createArticleDto[k] = v;

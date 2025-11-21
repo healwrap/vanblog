@@ -7,6 +7,7 @@ export class CreateDraftDto {
   category: string;
   author?: string;
   draft?: string;
+  cover?: string;
 }
 export class UpdateDraftDto {
   title?: string;
@@ -16,6 +17,7 @@ export class UpdateDraftDto {
   deleted?: boolean;
   author?: string;
   draft?: string;
+  cover?: string;
 }
 export class PublishDraftDto {
   hidden?: boolean;
@@ -23,6 +25,7 @@ export class PublishDraftDto {
   private?: boolean;
   password?: string;
   copyright?: string;
+  cover?: string;
 }
 export class SearchDraftOption {
   page: number;

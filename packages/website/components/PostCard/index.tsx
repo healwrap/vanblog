@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import AlertCard from "../AlertCard";
 import CopyRight from "../CopyRight";
 import Reward from "../Reward";
@@ -12,6 +13,7 @@ import { getTarget } from "../Link/tools";
 import TocMobile from "../TocMobile";
 import { hasToc } from "../../utils/hasToc";
 import Markdown from "../Markdown";
+import DefaultCover from "../DefaultCover";
 
 export default function (props: {
   id: number | string;
@@ -39,8 +41,10 @@ export default function (props: {
   customCopyRight: string | null;
   showExpirationReminder: boolean;
   showEditButton: boolean;
+  cover?: string;
 }) {
   const [lock, setLock] = useState(props.type != "overview" && props.private);
+  const router = useRouter();
   const { content, setContent } = props;
   const showDonate = useMemo(() => {
     if (lock) {
@@ -88,15 +92,39 @@ export default function (props: {
       <div
         style={{ position: "relative" }}
         id="post-card"
-        className="overflow-hidden post-card bg-white card-shadow py-4 px-1 sm:px-3 md:py-6 md:px-5 dark:bg-dark  dark:nav-shadow-dark"
+        className={`overflow-hidden post-card bg-white card-shadow dark:bg-dark  dark:nav-shadow-dark ${props.type === "overview" ? "cursor-pointer" : ""}`}
+        onClick={(e) => {
+          if (props.type !== "overview") return;
+          let el = e.target as HTMLElement | null;
+          while (el && el !== (e.currentTarget as HTMLElement)) {
+            if (el.tagName === "A" || el.getAttribute("data-stop-card-click") === "true") return;
+            el = el.parentElement;
+          }
+          router.push(`/post/${props.id}`);
+        }}
       >
+        {props.type === "overview" && (
+          props.cover ? (
+            <div className="w-full overflow-hidden">
+              <img
+                src={props.cover}
+                alt={props.title}
+                className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48">
+              <DefaultCover title={props.title} />
+            </div>
+          )
+        )}
+        <div className="py-4 px-1 sm:px-3 md:py-6 md:px-5">
         {props.top != 0 && <TopPinIcon></TopPinIcon>}
         <Title
           type={props.type}
           id={props.id}
           title={props.title}
           openArticleLinksInNewWindow={props.openArticleLinksInNewWindow}
-          showEditButton={props.showEditButton}
         />
 
         <SubTitle
@@ -107,6 +135,7 @@ export default function (props: {
           createdAt={props.createdAt}
           catelog={props.catelog}
           enableComment={props.enableComment}
+          showEditButton={props.showEditButton}
         />
         <div className="text-sm md:text-base  text-gray-600 mt-4 mx-2">
           {props.type == "article" && (
@@ -130,18 +159,7 @@ export default function (props: {
           )}
         </div>
 
-        {props.type == "overview" && (
-          <div className="w-full flex justify-center mt-4 ">
-            <Link
-              href={`/post/${props.id}`}
-              target={getTarget(props.openArticleLinksInNewWindow)}
-            >
-              <div className=" dark:bg-dark dark:hover:bg-dark-light dark:hover:text-dark-r dark:border-dark dark:text-dark hover:bg-gray-800 hover:text-gray-50 border-2 border-gray-800 text-sm md:text-base text-gray-700 px-2 py-1 transition-all rounded">
-                阅读全文
-              </div>
-            </Link>
-          </div>
-        )}
+        {false}
         {showDonate && props.pay && (
           <Reward
             aliPay={(props?.pay as any)[0]}
@@ -175,6 +193,7 @@ export default function (props: {
             height: props.type == "about" && !showDonate ? "16px" : "0",
           }}
         ></div>
+        </div>
       </div>
       {props.type != "overview" && (
         <WaLine enable={props.enableComment} visible={true} />

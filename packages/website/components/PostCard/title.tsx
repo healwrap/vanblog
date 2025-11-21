@@ -11,9 +11,7 @@ export function Title(props: {
   id: number | string;
   title: string;
   openArticleLinksInNewWindow: boolean;
-  showEditButton: boolean;
 }) {
-  const showEditButton = props.showEditButton && checkLogin();
   const newTab = useMemo(() => {
     if (props.type == "overview" && props.openArticleLinksInNewWindow) {
       return true;
@@ -25,36 +23,17 @@ export function Title(props: {
       {props.type != "about" ? (
         <Link href={`/post/${props.id}`} target={getTarget(newTab)} style={{width:"90%"}} title={props.title}>
           <div
-            className={`text-lg block font-medium overflow-hidden text-ellipsis whitespace-nowrap px-5  text-center mb-2 mt-2 dark:text-dark text-gray-700 ${
-              showEditButton ? "ml-8" : ""
-            } md:text-${props.type == "overview" ? "xl" : "2xl"} ua ua-link`}
+            className={`text-lg block font-medium px-5 text-center mb-2 mt-2 dark:text-dark text-gray-700  md:text-${props.type == "overview" ? "xl" : "2xl"} ua ua-link`}
           >
             {props.title}
           </div>
         </Link>
       ) : (
         <div
-          className={`text-lg block font-medium mb-2 mt-2 dark:text-dark text-gray-700 md:text-2xl ua ua-link  select-none ${
-            showEditButton ? "ml-12 mr-4" : ""
-          }`}
+          className={`text-lg block font-medium mb-2 mt-2 dark:text-dark text-gray-700 md:text-2xl ua ua-link  select-none `}
         >
           {props.title}
         </div>
-      )}
-      {showEditButton && (
-        <a
-          className="flex items-center"
-          href={
-            props.type === "about"
-              ? "/admin/editor?type=about"
-              : `/admin/editor?type=article&id=${props.id}`
-          }
-          target="_blank"
-        >
-          <div className=" text-dark dark:text-gray-700">
-            <div>编辑</div>
-          </div>
-        </a>
       )}
     </div>
   );
@@ -67,6 +46,7 @@ export function SubTitle(props: {
   enableComment: "true" | "false";
   id: number | string;
   openArticleLinksInNewWindow: boolean;
+  showEditButton?: boolean;
 }) {
   const iconSize = "16";
   const iconClass =
@@ -79,6 +59,7 @@ export function SubTitle(props: {
       return "/post/" + props.id;
     }
   }, [props]);
+  const showEdit = props.showEditButton && checkLogin();
   return (
     <div className="text-center text-xs md:text-sm divide-x divide-gray-400 text-gray-400 dark:text-dark post-card-sub-title">
       <span className="inline-flex px-2 items-center">
@@ -174,6 +155,17 @@ export function SubTitle(props: {
           <span className="waline-comment-count" data-path={dataPath}>
             0
           </span>
+        </span>
+      )}
+      {showEdit && (
+        <span className="inline-flex px-2 items-center">
+          <a
+            href={props.type === "about" ? "/admin/editor?type=about" : `/admin/editor?type=article&id=${props.id}`}
+            target="_blank"
+            className="hover:text-gray-900 dark:hover:text-dark-hover"
+          >
+            <div>编辑</div>
+          </a>
         </span>
       )}
     </div>

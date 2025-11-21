@@ -109,6 +109,7 @@ export class WebsiteProvider {
       this.ctx = spawn(cmd, args, {
         env: {
           ...process.env,
+          HOSTNAME: '127.0.0.1',
           ...loadEnvs,
         },
         cwd: path.join(path.resolve(process.cwd(), '..'), 'website'),

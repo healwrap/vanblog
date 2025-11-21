@@ -17,12 +17,19 @@ export const getArticlesByOption = async (
 ): Promise<{ articles: Article[]; total: number; totalWordCount?: number }> => {
   let queryString = "";
   for (const [k, v] of Object.entries(option)) {
+    if (v === undefined || v === null || v === "") continue;
     queryString += `${k}=${v}&`;
   }
-  queryString = queryString.substring(0, queryString.length - 1);
+  if (queryString.endsWith("&")) {
+    queryString = queryString.substring(0, queryString.length - 1);
+  }
   queryString = encodeQuerystring(queryString);
   try {
-    const url = `${config.baseUrl}api/public/article?${queryString}`;
+    let baseUrl = config.baseUrl;
+    if (typeof window !== "undefined") {
+      baseUrl = "/";
+    }
+    const url = `${baseUrl}api/public/article?${queryString}`;
     const res = await fetch(url);
     const { statusCode, data } = await res.json();
     if (statusCode == 233) {

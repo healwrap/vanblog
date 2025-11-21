@@ -1,9 +1,13 @@
-const normalizeURL = (url: string) => new URL(url).toString();
+function normalizeURL(url: string): string {
+  return new URL(url).toString();
+}
 
 // 从环境变量中读取.
 export const config = {
   baseUrl: normalizeURL(
-    process.env.VAN_BLOG_SERVER_URL ?? "http://localhost:3000"
+    (process.env.VAN_BLOG_SERVER_URL && process.env.VAN_BLOG_SERVER_URL.trim() !== "")
+      ? process.env.VAN_BLOG_SERVER_URL
+      : "http://localhost:3000"
   ),
 };
 

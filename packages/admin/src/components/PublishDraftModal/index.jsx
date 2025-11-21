@@ -57,6 +57,12 @@ export default function (props) {
           }}
         />
         <ProFormText
+          width="md"
+          name="cover"
+          label="封面图片"
+          placeholder="请输入封面图片链接"
+        />
+        <ProFormText
           label="置顶优先级"
           width="md"
           id="top"

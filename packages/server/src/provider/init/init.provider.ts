@@ -18,7 +18,6 @@ import { checkOrCreate } from 'src/utils/checkFolder';
 import { WebsiteProvider } from '../website/website.provider';
 import { CategoryDocument } from 'src/scheme/category.schema';
 import { CustomPageDocument } from 'src/scheme/customPage.schema';
-import e from 'express';
 @Injectable()
 export class InitProvider {
   logger = new Logger(InitProvider.name);

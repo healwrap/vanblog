@@ -70,6 +70,12 @@ export default function (props: {
         placeholder="请输入标题"
         rules={[{ required: true, message: '这是必填项' }]}
       />
+      <ProFormText
+        width="md"
+        name="cover"
+        label="封面图片"
+        placeholder="请输入封面图片链接"
+      />
       <AuthorField />
       <ProFormSelect
         mode="tags"

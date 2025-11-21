@@ -47,6 +47,9 @@ export class Article extends Document {
   @Prop({ default: 0 })
   visited: number;
 
+  @Prop({ default: '' })
+  cover: string;
+
   @Prop()
   copyright?: string;
 
