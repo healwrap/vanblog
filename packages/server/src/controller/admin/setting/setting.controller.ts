@@ -2,7 +2,13 @@ import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 
 import { ApiTags } from '@nestjs/swagger';
 import { config } from 'src/config/index';
-import { LayoutSetting, LoginSetting, StaticSetting, WalineSetting } from 'src/types/setting.dto';
+import {
+  AISetting,
+  LayoutSetting,
+  LoginSetting,
+  StaticSetting,
+  WalineSetting,
+} from 'src/types/setting.dto';
 import { AdminGuard } from 'src/provider/auth/auth.guard';
 import { ISRProvider } from 'src/provider/isr/isr.provider';
 import { SettingProvider } from 'src/provider/setting/setting.provider';
@@ -113,6 +119,30 @@ export class SettingController {
   @Get('login')
   async getLoginSetting() {
     const res = await this.settingProvider.getLoginSetting();
+    return {
+      statusCode: 200,
+      data: res,
+    };
+  }
+
+  @Put('ai')
+  async updateAISetting(@Body() body: AISetting) {
+    if (config.demo && config.demo == 'true') {
+      return {
+        statusCode: 401,
+        message: '演示站禁止修改此项！',
+      };
+    }
+    const res = await this.settingProvider.updateAISetting(body);
+    return {
+      statusCode: 200,
+      data: res,
+    };
+  }
+
+  @Get('ai')
+  async getAISetting() {
+    const res = await this.settingProvider.getAISetting();
     return {
       statusCode: 200,
       data: res,

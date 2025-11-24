@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
+  AISetting,
   HttpsSetting,
   ISRSetting,
   LayoutSetting,
@@ -10,6 +11,7 @@ import {
   StaticSetting,
   VersionSetting,
   WalineSetting,
+  defaultAISetting,
   defaultStaticSetting,
 } from 'src/types/setting.dto';
 import { SettingDocument } from 'src/scheme/setting.schema';
@@ -64,6 +66,18 @@ export class SettingProvider {
       };
     }
   }
+  async getAISetting(): Promise<AISetting> {
+    const res = (await this.settingModel.findOne({ type: 'ai' }).exec()) as {
+      value: AISetting;
+    };
+    if (res && res.value) {
+      return {
+        ...defaultAISetting,
+        ...(res.value as any),
+      };
+    }
+    return defaultAISetting;
+  }
   async updateISRSetting(dto: ISRSetting) {
     const oldValue = await this.getISRSetting();
     const newValue = { ...oldValue, ...dto };
@@ -74,6 +88,19 @@ export class SettingProvider {
       });
     }
     const res = await this.settingModel.updateOne({ type: 'isr' }, { value: newValue });
+    return res;
+  }
+  async updateAISetting(dto: Partial<AISetting>) {
+    const oldValue = await this.getAISetting();
+    const newValue = { ...oldValue, ...dto };
+    const existed = await this.settingModel.findOne({ type: 'ai' }).exec();
+    if (!existed) {
+      return await this.settingModel.create({
+        type: 'ai',
+        value: newValue,
+      });
+    }
+    const res = await this.settingModel.updateOne({ type: 'ai' }, { value: newValue });
     return res;
   }
   async getMenuSetting(): Promise<any> {

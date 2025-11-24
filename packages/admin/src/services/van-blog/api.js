@@ -470,6 +470,17 @@ export async function updateStaticSetting(data) {
     data: data,
   });
 }
+export async function getAISetting() {
+  return request(`/api/admin/setting/ai`, {
+    method: 'GET',
+  });
+}
+export async function updateAISetting(data) {
+  return request(`/api/admin/setting/ai`, {
+    method: 'PUT',
+    data,
+  });
+}
 export async function getDraftsByOption(option) {
   const newQuery = {};
   for (const [k, v] of Object.entries(option)) {

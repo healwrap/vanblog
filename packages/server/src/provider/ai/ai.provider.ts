@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
-import { loadConfig } from 'src/utils/loadConfig';
+import { SettingProvider } from '../setting/setting.provider';
+import { AISetting } from 'src/types/setting.dto';
 
 export interface AIConfig {
   enabled: boolean;
@@ -12,36 +13,25 @@ export interface AIConfig {
 
 @Injectable()
 export class AiProvider {
-  private cfg: AIConfig;
-  constructor() {
-    this.cfg = {
-      enabled: (loadConfig('ai.enabled', 'true') as string) !== 'false',
-      endpoint: loadConfig('ai.endpoint', ''),
-      apiKey: loadConfig('ai.apiKey', ''),
-      model: loadConfig('ai.model', ''),
-      timeout: parseInt(loadConfig('ai.timeout', '15000') as string),
-    };
-  }
+  constructor(private readonly settingProvider: SettingProvider) {}
 
   async generateIntro(content: string): Promise<string> {
-    if (!this.cfg.enabled) {
-      throw new InternalServerErrorException('AI 功能未启用');
-    }
-    if (!this.cfg.apiKey) {
-      throw new InternalServerErrorException('缺少 AI Key');
+    const cfg = (await this.settingProvider.getAISetting()) as AISetting;
+    if (!cfg.enabled || !cfg.apiKey || !cfg.endpoint || !cfg.model) {
+      throw new InternalServerErrorException('请先配置AI功能');
     }
     const userPrompt = `请根据以下文章内容，用中文生成不超过100字的简介，突出主题，避免换行与多余标点：\n\n${content}`;
     try {
       const res = await axios({
         method: 'POST',
-        url: `${this.cfg.endpoint}/chat/completions`,
+        url: `${cfg.endpoint}/chat/completions`,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.cfg.apiKey}`,
+          Authorization: `Bearer ${cfg.apiKey}`,
         },
-        timeout: this.cfg.timeout,
+        timeout: cfg.timeout,
         data: {
-          model: this.cfg.model,
+          model: cfg.model,
           messages: [
             { role: 'system', content: '你是一名博客编辑，负责生成精炼的文章简介。' },
             { role: 'user', content: userPrompt },

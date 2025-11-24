@@ -17,7 +17,8 @@ export type SettingType =
   | 'login'
   | 'menu'
   | 'version'
-  | 'isr';
+  | 'isr'
+  | 'ai';
 
 export type SettingValue =
   | StaticSetting
@@ -25,12 +26,29 @@ export type SettingValue =
   | WalineSetting
   | LayoutSetting
   | VersionSetting
-  | ISRSetting;
+  | ISRSetting
+  | AISetting;
 
 export interface ISRSetting {
   mode: 'delay' | 'onDemand';
   delay: number;
 }
+
+export interface AISetting {
+  enabled: boolean;
+  endpoint: string;
+  apiKey: string;
+  model: string;
+  timeout: number;
+}
+
+export const defaultAISetting: AISetting = {
+  enabled: false,
+  endpoint: '',
+  apiKey: '',
+  model: '',
+  timeout: 15000,
+};
 
 export interface MenuSetting {
   data: MenuItem[];

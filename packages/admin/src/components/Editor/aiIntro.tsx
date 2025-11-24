@@ -32,8 +32,9 @@ async function genIntroFromLLM(content: string): Promise<string | null> {
       return null
     }
     return intro
-  } catch (err) {
-    message.error('AI 简介生成失败')
+  } catch (err: any) {
+    const msg = err?.message || 'AI 简介生成失败'
+    message.error(msg)
     return null
   }
 }
