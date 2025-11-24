@@ -339,6 +339,9 @@ importers:
       '@types/request-ip':
         specifier: ^0.0.37
         version: 0.0.37
+      '@waline/vercel':
+        specifier: 1.31.7
+        version: 1.31.7
       axios:
         specifier: ^1.6.2
         version: 1.6.2
@@ -511,6 +514,9 @@ importers:
       '@next/bundle-analyzer':
         specifier: ^13.5.6
         version: 13.5.6
+      '@types/geopattern':
+        specifier: ^1.2.9
+        version: 1.2.9
       '@types/lodash':
         specifier: ^4.14.202
         version: 4.14.202
@@ -532,6 +538,9 @@ importers:
       eslint-config-next:
         specifier: ^13.5.6
         version: 13.5.6(eslint@8.54.0)(typescript@4.9.5)
+      geopattern:
+        specifier: ^1.2.3
+        version: 1.2.3
       headroom.js:
         specifier: ^0.12.0
         version: 0.12.0
@@ -7365,6 +7374,10 @@ packages:
       '@types/jsonfile': 6.1.4
       '@types/node': 20.10.0
     dev: true
+
+  /@types/geopattern@1.2.9:
+    resolution: {integrity: sha512-aXfEVWi6cGh0zYRTw8LMv/ddFPN/YkA1cTTrGAw9EizvWq5rmbu8MaKXkLiHCqtWpRvxHh8aAdkjRqtNpob8ow==}
+    dev: false
 
   /@types/glob@7.2.0:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
@@ -15666,6 +15679,10 @@ packages:
     resolution: {integrity: sha512-/7zWrWJGblJZ4OnLaIDoO3GYv28ksNwxlBZ80YPHLWt5P6xvALW8dLfeoQ9f9PHtuaWnUXTa7bRnjDzLp9C6Yg==}
     dev: true
 
+  /extend@1.2.1:
+    resolution: {integrity: sha512-2/JwIYRpMBDSjbQjUUppNSrmc719crhFaWIdT+TRSVA8gE+6HEobQWqJ6VkPt/H8twS7h/0WWs7veh8wmp98Ng==}
+    dev: false
+
   /extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
@@ -16430,6 +16447,12 @@ packages:
   /gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
+
+  /geopattern@1.2.3:
+    resolution: {integrity: sha512-UzrR9D0xUrXx71ROZTKbTg1isWdcfcYAXsJrqtvhDkQV2JCsRyqws6TuqUdkBKncg5CPevb0vyXXUJrZpjGFXw==}
+    dependencies:
+      extend: 1.2.1
+    dev: false
 
   /get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}

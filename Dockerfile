@@ -74,7 +74,9 @@ RUN pnpm i
 # 安装 waline
 WORKDIR /app/waline
 COPY ./packages/waline/ ./
-RUN pnpm i
+RUN apk add --no-cache --virtual .waline-build-deps python3 make g++ \
+  && npm_config_build_from_source=1 pnpm i \
+  && apk del .waline-build-deps
 # 复制 server
 WORKDIR /app/server
 COPY --from=SERVER_BUILDER /app/node_modules ./node_modules
