@@ -4,12 +4,13 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import SearchCard from "../SearchCard";
 import ThemeButton from "../ThemeButton";
 import KeyCard from "../KeyCard";
-import { MenuItem } from "../../api/getAllData";
+import type { MenuItem } from "../../api/getAllData";
 import AdminButton from "../AdminButton";
 import { ThemeContext } from "../../utils/themeContext";
 import RssButton from "../RssButton";
 import Item from "./item";
 import { encodeQuerystring } from "../../utils/encode";
+import { getMenuItemKey } from "./menuKey";
 export default function (props: {
   logo: string;
   logoDark: string;
@@ -33,7 +34,7 @@ export default function (props: {
   const { theme } = useContext(ThemeContext);
 
   const picUrl = useMemo(() => {
-    if (theme.includes("dark") && props.logoDark && props.logoDark != "") {
+    if (theme.includes("dark") && props.logoDark && props.logoDark !== "") {
       return props.logoDark;
     }
     return props.logo;
@@ -51,7 +52,7 @@ export default function (props: {
     return () => {
       headroom?.destroy();
     };
-  }, [headroom, setHeadroom, props.autoHide]);
+  }, [headroom, props.autoHide]);
 
   return (
     <>
@@ -71,8 +72,10 @@ export default function (props: {
           style={{ height: 56 }}
         >
           <div className="mx-4 flex items-center">
-            <div
+            <button
+              type="button"
               className="cursor-pointer block xl:hidden"
+              aria-label="打开导航菜单"
               onClick={() => {
                 if (!props.isOpen) {
                   // 要打开
@@ -90,6 +93,8 @@ export default function (props: {
                   width="24"
                   height="24"
                   className="dark:text-dark fill-gray-600"
+                  aria-hidden="true"
+                  focusable="false"
                 >
                   <path
                     d="M904 160H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8zM904 784H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8zM904 472H120c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-64c0-4.4-3.6-8-8-8z"
@@ -97,8 +102,8 @@ export default function (props: {
                   ></path>
                 </svg>
               </span>
-            </div>
-            {props.headerLeftContent == "siteLogo" && (
+            </button>
+            {props.headerLeftContent === "siteLogo" && (
               <div className="hidden xl:block transform translate-x-2">
                 <img
                   alt="site logo"
@@ -110,7 +115,7 @@ export default function (props: {
               </div>
             )}
           </div>
-          {props.headerLeftContent == "siteName" && (
+          {props.headerLeftContent === "siteName" && (
             <Link href="/">
               <div className="text-gray-800 cursor-pointer select-none text-lg dark:text-dark lg:text-xl font-medium  mr-4 hidden xl:block">
                 {props.siteName}
@@ -128,12 +133,13 @@ export default function (props: {
               </Link>
             </div>
             <ul className=" xl:flex h-full items-center  text-sm text-gray-600 dark:text-dark hidden">
-              {props.menus.map((m) => {
-                return <Item key={m.id} item={m} />;
+              {props.menus.map((m, idx) => {
+                return <Item key={getMenuItemKey(m, idx)} item={m} />;
               })}
             </ul>
             <div className="flex nav-action">
-              <div
+              <button
+                type="button"
                 onClick={() => {
                   setShowSearch(true);
                   document.body.style.overflow = "hidden";
@@ -149,6 +155,8 @@ export default function (props: {
                     p-id="2305"
                     width="20"
                     height="20"
+                    aria-hidden="true"
+                    focusable="false"
                   >
                     <path
                       d="M789.804097 737.772047 742.865042 784.699846 898.765741 940.600545 945.704796 893.672746Z"
@@ -163,16 +171,16 @@ export default function (props: {
                 <div className="flex items-center ">
                   <KeyCard type="search"></KeyCard>
                 </div>
-              </div>
+              </button>
               <ThemeButton defaultTheme={props.defaultTheme} />
-              {props.showRSS == "true" && (
-                <RssButton showAdminButton={props.showAdminButton == "true"} />
+              {props.showRSS === "true" && (
+                <RssButton showAdminButton={props.showAdminButton === "true"} />
               )}
-              {props.showAdminButton == "true" && <AdminButton />}
+              {props.showAdminButton === "true" && <AdminButton />}
             </div>
           </div>
         </div>
-        {Boolean(props.categories.length) && props.showSubMenu == "true" && (
+        {Boolean(props.categories.length) && props.showSubMenu === "true" && (
           <div className="h-10 items-center hidden xl:flex border-b border-gray-200 dark:border-nav-dark overflow-hidden">
             <div
               className="mx-5"

@@ -102,6 +102,9 @@ export default function (props: {
             showAdminButton={props.option.showAdminButton}
             showFriends={props.option.showFriends}
             menus={props.option.menus}
+            siteName={props.option.siteName}
+            logo={props.option.logo}
+            logoDark={props.option.logoDark}
           />
           <div
             className={`flex-1 w-full mx-auto lg:px-2 lg:py-4 py-2 px-2 text-gray-700 ${

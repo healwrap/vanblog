@@ -1,21 +1,126 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChildProcess, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { MongoClient, ObjectId } from 'mongodb';
+import type { ChildProcess } from 'node:child_process';
+import type { Db } from 'mongodb';
+import * as fs from 'fs';
+import * as path from 'path';
+import { createRequire } from 'module';
 import { config } from 'src/config';
-import { WalineSetting } from 'src/types/setting.dto';
+import type { WalineSetting } from 'src/types/setting.dto';
 import { makeSalt } from 'src/utils/crypto';
+import { checkOrCreate } from 'src/utils/checkFolder';
 import { MetaProvider } from '../meta/meta.provider';
 import { SettingProvider } from '../setting/setting.provider';
-import { MongoClient, Db, ObjectId } from 'mongodb';
 @Injectable()
 export class WalineProvider {
   // constructor() {}
   ctx: ChildProcess = null;
   logger = new Logger(WalineProvider.name);
   env = {};
+  private readonly walinePidFile = path.join(config.log, 'waline.pid');
   constructor(
     private metaProvider: MetaProvider,
     private readonly settingProvider: SettingProvider,
   ) {}
+
+  private ensureLogDirReady() {
+    try {
+      checkOrCreate(config.log);
+    } catch (err) {
+      this.logger.error('创建日志目录失败', err as Error);
+    }
+  }
+
+  private persistWalinePid(pid: number) {
+    if (typeof pid !== 'number' || Number.isNaN(pid)) {
+      return;
+    }
+    try {
+      this.ensureLogDirReady();
+      fs.writeFileSync(this.walinePidFile, String(pid), { encoding: 'utf-8' });
+    } catch (err) {
+      this.logger.error('写入 Waline pid 文件失败', err as Error);
+    }
+  }
+
+  private removeWalinePidFile() {
+    try {
+      if (fs.existsSync(this.walinePidFile)) {
+        fs.unlinkSync(this.walinePidFile);
+      }
+    } catch (err) {
+      this.logger.error('删除 Waline pid 文件失败', err as Error);
+    }
+  }
+
+  private async cleanupStaleWalineProcess() {
+    this.ensureLogDirReady();
+    if (!fs.existsSync(this.walinePidFile)) {
+      return;
+    }
+    const rawPid = fs.readFileSync(this.walinePidFile, { encoding: 'utf-8' }).trim();
+    const pid = Number(rawPid);
+    if (!Number.isFinite(pid)) {
+      this.removeWalinePidFile();
+      return;
+    }
+    try {
+      process.kill(pid, 0);
+    } catch {
+      this.removeWalinePidFile();
+      return;
+    }
+    this.logger.warn(`检测到遗留 Waline 进程 (pid: ${pid})，尝试结束`);
+    try {
+      process.kill(pid, 'SIGTERM');
+      await this.waitForPidExit(pid, 4000);
+    } catch (err) {
+      this.logger.warn(`Waline 进程 ${pid} 未能优雅退出，尝试强制结束`, err as Error);
+      try {
+        process.kill(pid, 'SIGKILL');
+        await this.waitForPidExit(pid, 2000);
+      } catch (killErr) {
+        this.logger.error(`强制结束 Waline 进程 ${pid} 失败`, killErr as Error);
+      }
+    } finally {
+      this.removeWalinePidFile();
+    }
+  }
+
+  private async waitForPidExit(pid: number, timeout = 4000) {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      await this.sleep(200);
+      try {
+        process.kill(pid, 0);
+      } catch {
+        return;
+      }
+    }
+    throw new Error(`进程 ${pid} 仍在运行`);
+  }
+
+  private waitChildProcessExit(child: ChildProcess, timeout = 5000): Promise<void> {
+    if (!child || child.exitCode !== null) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        child.removeListener('exit', onExit);
+        reject(new Error('Waline 进程退出超时'));
+      }, timeout);
+      const onExit = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      child.once('exit', onExit);
+    });
+  }
+
+  private sleep(duration: number) {
+    return new Promise((resolve) => setTimeout(resolve, duration));
+  }
 
   mapConfig2Env(config: WalineSetting) {
     const walineEnvMapping = {
@@ -37,15 +142,15 @@ export class WalineProvider {
       return result;
     }
     for (const key of Object.keys(config)) {
-      if (key == 'forceLoginComment') {
+      if (key === 'forceLoginComment') {
         if (config.forceLoginComment) {
           result['LOGIN'] = 'force';
         }
-      } else if (key == 'akismet.enabled') {
+      } else if (key === 'akismet.enabled') {
         if (config['akismet.enabled'] === false) {
           result['AKISMET_KEY'] = 'false';
         }
-      } else if (key == 'otherConfig') {
+      } else if (key === 'otherConfig') {
         if (config.otherConfig) {
           try {
             const data = JSON.parse(config.otherConfig);
@@ -110,6 +215,11 @@ export class WalineProvider {
       ...otherEnv,
       ...walineConfigEnv,
     };
+    this.env['DB'] = 'mongo';
+    this.env['DRIVER'] = 'mongo';
+    this.env['DATABASE_URL'] = config.mongoUrl;
+    this.env['MONGO_URL'] = config.mongoUrl;
+    this.env['MONGO_URI'] = config.mongoUrl;
     if (!this.env['AKISMET_KEY']) {
       this.env['AKISMET_KEY'] = 'false';
     }
@@ -126,29 +236,59 @@ export class WalineProvider {
     await this.run();
   }
   async stop() {
-    if (this.ctx) {
-      this.ctx.unref();
-      process.kill(-this.ctx.pid);
+    if (!this.ctx) {
+      await this.cleanupStaleWalineProcess();
+      return;
+    }
+    const child = this.ctx;
+    try {
+      child.kill('SIGTERM');
+    } catch (err) {
+      this.logger.warn('发送 SIGTERM 到 Waline 失败', err as Error);
+    }
+    try {
+      await this.waitChildProcessExit(child);
+    } catch (err) {
+      this.logger.warn('Waline 停止超时，尝试 SIGKILL', err as Error);
+      try {
+        child.kill('SIGKILL');
+      } catch (killErr) {
+        this.logger.error('强制停止 Waline 失败', killErr as Error);
+      }
+      await this.waitChildProcessExit(child, 2000).catch(() => undefined);
+    } finally {
+      this.removeWalinePidFile();
       this.ctx = null;
       this.logger.log('waline 停止成功！');
     }
   }
   async run(): Promise<any> {
     await this.loadEnv();
-    const base = require.resolve('@waline/vercel/vanilla.js');
+    await this.cleanupStaleWalineProcess();
+    let base: string;
+    try {
+      base = require.resolve('@waline/vercel/vanilla.js');
+    } catch (err) {
+      this.logger.warn('主进程未安装 Waline 依赖，尝试回退到子包', err as Error);
+      const walinePkg = path.join(path.resolve(process.cwd(), '..'), 'waline', 'package.json');
+      const walineRequire = createRequire(walinePkg);
+      base = walineRequire.resolve('@waline/vercel/vanilla.js');
+    }
     if (this.ctx == null) {
       this.ctx = spawn('node', [base], {
         env: {
           ...process.env,
           ...this.env,
+          NODE_PATH: ['/app/waline/node_modules', process.env.NODE_PATH || ''].join(':'),
         },
-        cwd: process.cwd(),
-        detached: true,
+        cwd: path.join(path.resolve(process.cwd(), '..'), 'waline'),
       });
+      this.persistWalinePid(this.ctx.pid);
       this.ctx.on('message', (message) => {
         this.logger.log(message);
       });
       this.ctx.on('exit', () => {
+        this.removeWalinePidFile();
         this.ctx = null;
         this.logger.warn('Waline 进程退出');
       });

@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { MouseEventHandler, useMemo, useRef, useState } from "react";
-import { MenuItem } from "../../api/getAllData";
+import type { MouseEventHandler } from "react";
+import { useMemo, useState } from "react";
+import type { MenuItem } from "../../api/getAllData";
+import { getMenuItemKey } from "./menuKey";
 
 function LinkItemAtom(props: {
   item: MenuItem;
@@ -56,7 +58,6 @@ function LinkItemWithChildren(props: { item: MenuItem }) {
   }, [hover, hoverSub]);
 
   return (
-    <>
       <div className="h-full relative">
         <LinkItemAtom
           item={item}
@@ -78,18 +79,30 @@ function LinkItemWithChildren(props: { item: MenuItem }) {
             transform: show ? "scale(100%)" : "scale(0)",
             zIndex: 80,
           }}
+          role="menu"
+          tabIndex={0}
           onMouseEnter={() => {
             setHoverSub(true);
           }}
           onMouseLeave={() => {
             setHoverSub(false);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              setHoverSub(true);
+            }
+          }}
+          onKeyUp={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              setHoverSub(false);
+            }
+          }}
         >
-          {item.children?.map((c) => {
+          {item.children?.map((c, childIdx) => {
             return (
               <LinkItemAtom
                 item={c}
-                key={c.id}
+                key={getMenuItemKey(c, `sub-${item.id}-${childIdx}`)}
                 clsA={"h-full flex items-center px-2 md:px-4 py-2 "}
                 cls={
                   "transition-all cursor-pointer flex items-center h-full hover:bg-gray-300 transition-all dark:hover:bg-dark-2  dark:text-dark dark:hover:text-dark-hover"
@@ -99,7 +112,6 @@ function LinkItemWithChildren(props: { item: MenuItem }) {
           })}
         </div>
       </div>
-    </>
   );
 }
 

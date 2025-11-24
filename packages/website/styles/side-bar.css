@@ -39,15 +39,15 @@ Note: Beware of modifying this element as it can break the animations - you shou
 
 /* General sidebar styles */
 .bm-menu {
-  background: #fff;
-  padding: 0.5em 0;
+  background: transparent;
+  padding: 0;
   font-size: 1.15em;
-  width: 250px;
+  width: 280px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   z-index: 110;
 }
 .dark .bm-menu {
-  background: #26282c;
+  background: transparent;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -58,12 +58,18 @@ Note: Beware of modifying this element as it can break the animations - you shou
 
 /* Wrapper for item list */
 .bm-item-list {
-  color: #b8b7ad;
+  color: inherit;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Individual item */
 .bm-item {
-  display: inline-block;
+  display: block;
+  height: 100%;
+  outline: none;
 }
 
 /* Styling of overlay */

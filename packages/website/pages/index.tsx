@@ -228,12 +228,15 @@ const Home = (props: IndexPageProps) => {
         <div className="sticky top-[72px] space-y-3 max-h-[calc(100vh-72px-16px)] no-scrollbar max-w-full">
           <div className="bg-white dark:bg-dark card-shadow dark:card-shadow-dark rounded">
             <div ref={categoryHeaderRef} className="px-4 pt-3 pb-2 text-sm font-medium text-gray-800 dark:text-dark text-center">分类</div>
-            <ul className="no-scrollbar overflow-y-auto" style={{ maxHeight: catListMax }}>
+            <ul className="no-scrollbar overflow-y-auto" style={mounted && catListMax ? { maxHeight: catListMax } : undefined}>
               {["全部", ...props.layoutProps.categories].map((cat) => (
                 <li
                   key={cat}
                   className={`px-4 py-2 text-sm ${selectedCategory===cat||(!selectedCategory&&cat==="全部")?"bg-gray-100 dark:bg-dark-2":""} text-gray-700 dark:text-dark hover:bg-gray-100 dark:hover:bg-dark-2 cursor-pointer text-center`}
                   onClick={(e)=>{e.preventDefault(); reloadWithFilter({category: cat==="全部"? null : cat, tag: selectedTag});}}
+                  onKeyDown={(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault(); reloadWithFilter({category: cat==="全部"? null : cat, tag: selectedTag});}}}
+                  role="button"
+                  tabIndex={0}
                 >
                   {cat}
                 </li>
